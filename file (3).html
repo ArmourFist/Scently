@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scently — Find Your Perfect Fragrance</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0d; --surface: #1a1a1a; --surface2: #222;
+      --gold: #c9a84c; --gold-light: #e2c77e;
+      --text: #f0ece4; --muted: #888880; --border: #2e2e2e;
+      --font: 'Georgia', serif; --sans: 'Helvetica Neue', Arial, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── PAGE SYSTEM ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; height: 64px;
+      background: rgba(13,13,13,0.95); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font); font-size: 1.3rem; cursor: pointer; }
+    .nav-logo .icon { width: 32px; height: 32px; background: var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .nav-links { display: flex; gap: 28px; list-style: none; font-size: 0.88rem; color: var(--muted); }
+    .nav-links a { cursor: pointer; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .btn-primary { background: var(--gold); color: #0d0d0d; border: none; border-radius: 6px; padding: 9px 20px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 9px 20px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: border-color .2s, color .2s; }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-sm { padding: 7px 14px; font-size: 0.8rem; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 88vh; display: flex; align-items: center; padding: 60px 5%;
+      background: radial-gradient(ellipse at 70% 40%, rgba(201,168,76,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(201,168,76,0.05) 0%, transparent 50%), var(--bg);
+      position: relative; overflow: hidden;
+    }
+    .hero-content { max-width: 520px; z-index: 2; }
+    .hero-content h1 { font-family: var(--font); font-size: clamp(2.4rem, 5vw, 3.8rem); line-height: 1.15; margin-bottom: 20px; }
+    .hero-content h1 em { color: var(--gold); font-style: italic; }
+    .hero-content p { color: var(--muted); font-size: 1rem; margin-bottom: 32px; max-width: 400px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-deco { position: absolute; right: 4%; top: 50%; transform: translateY(-50%); font-size: clamp(8rem, 18vw, 14rem); opacity: 0.1; pointer-events: none; user-select: none; }
+    .hero-badges { display: flex; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+    .badge { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 0.82rem; }
+    .badge-sub { color: var(--muted); font-size: 0.74rem; margin-top: 1px; }
+    .hero-stats { display: flex; gap: 32px; margin-top: 40px; border-top: 1px solid var(--border); padding-top: 28px; flex-wrap: wrap; }
+    .stat-item .num { font-family: var(--font); font-size: 1.5rem; color: var(--gold); }
+    .stat-item .label { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── SECTIONS ── */
+    section { padding: 80px 5%; }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-header h2 { font-family: var(--font); font-size: clamp(1.8rem, 3.5vw, 2.6rem); margin-bottom: 10px; }
+    .section-header p { color: var(--muted); max-width: 480px; margin: 0 auto; font-size: 0.95rem; }
+
+    /* ── QUIZ ── */
+    #quiz-section { background: var(--surface); }
+    .quiz-container { max-width: 680px; margin: 0 auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 40px; }
+    .quiz-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .step-label { font-size: 0.8rem; color: var(--muted); min-width: 72px; }
+    .progress-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; }
+    .progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width .4s; }
+    .quiz-question { font-family: var(--font); font-size: 1.4rem; margin-bottom: 8px; }
+    .quiz-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 24px; }
+    .option-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .option-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 18px; cursor: pointer; transition: border-color .2s, background .2s; }
+    .option-card:hover { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+    .option-card input[type=radio] { accent-color: var(--gold); width: 16px; height: 16px; flex-shrink: 0; }
+    .option-title { font-weight: 600; font-size: 0.92rem; }
+    .option-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .scent-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .scent-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 10px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; position: relative; }
+    .scent-card:hover { border-color: var(--gold); }
+    .scent-card.selected { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+    .scent-card.selected::after { content: '✓'; position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; background: var(--gold); border-radius: 50%; color: #000; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+    .scent-img-icon { font-size: 2rem; margin-bottom: 8px; }
+    .scent-name { font-size: 0.8rem; font-weight: 600; }
+    .quiz-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .quiz-tip { margin-top: 20px; padding: 12px 16px; background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.15); border-radius: 8px; font-size: 0.82rem; color: var(--muted); }
+    .quiz-step { display: none; }
+    .quiz-step.active { display: block; }
+
+    /* ── BROWSE PAGE ── */
+    #browse-page { min-height: 100vh; padding: 0; }
+    .browse-header {
+      padding: 48px 5% 32px;
+      background: radial-gradient(ellipse at 60% 0%, rgba(201,168,76,0.07) 0%, transparent 60%), var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .browse-header h1 { font-family: var(--font); font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 10px; }
+    .browse-header p { color: var(--muted); font-size: 0.95rem; max-width: 500px; margin-bottom: 28px; }
+    .browse-filters { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filter-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 8px 12px; font-size: 0.82rem; cursor: pointer; outline: none; transition: border-color .2s; }
+    .filter-select:focus { border-color: var(--gold); }
+    .browse-body { padding: 48px 5%; }
+    .brand-section { margin-bottom: 56px; }
+    .brand-header {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+      padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .brand-logo-circle {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .brand-name-title { font-family: var(--font); font-size: 1.5rem; }
+    .brand-count { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    .brand-visit { margin-left: auto; font-size: 0.8rem; color: var(--gold); border: 1px solid rgba(201,168,76,0.3); border-radius: 6px; padding: 6px 14px; cursor: pointer; transition: background .2s; }
+    .brand-visit:hover { background: rgba(201,168,76,0.1); }
+    .brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+
+    /* ── FRAGRANCE CARD ── */
+    .fragrance-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; cursor: pointer;
+      transition: border-color .2s, transform .2s;
+    }
+    .fragrance-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+    .frag-img-wrap {
+      width: 100%; height: 190px;
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .frag-img-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
+    .frag-emoji-display { font-size: 4.5rem; opacity: 0.55; }
+    .match-badge-card { position: absolute; top: 10px; right: 10px; background: rgba(201,168,76,0.92); color: #000; border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; }
+    .frag-body { padding: 18px; }
+    .frag-brand-label { font-size: 0.73rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
+    .frag-name { font-family: var(--font); font-size: 1.02rem; margin-bottom: 8px; }
+    .frag-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+    .tag { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 9px; font-size: 0.7rem; color: var(--muted); }
+    .frag-notes-preview { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+    .frag-footer { display: flex; align-items: center; justify-content: space-between; }
+    .frag-price { font-family: var(--font); font-size: 0.95rem; }
+
+    /* ── HOME RESULTS STRIP ── */
+    #home-results { background: var(--bg); }
+    .home-frag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; max-width: 1100px; margin: 0 auto; }
+
+    /* ── NOTES PYRAMID ── */
+    .notes-pyramid { margin: 14px 0; }
+    .notes-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+    .notes-label { font-size: 0.72rem; color: var(--gold); min-width: 52px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-top: 2px; }
+    .notes-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+    .note-pill { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2); border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; color: var(--text); }
+
+    /* ── MODAL ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.87); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; max-width: 620px; width: 100%;
+      margin: auto; position: relative;
+    }
+    .modal-img-wrap { width: 100%; height: 260px; background: linear-gradient(135deg, var(--surface2), var(--surface)); display: flex; align-items: center; justify-content: center; border-radius: 16px 16px 0 0; overflow: hidden; }
+    .modal-img-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 24px; }
+    .modal-emoji-lg { font-size: 7rem; opacity: 0.55; }
+    .modal-body { padding: 28px; }
+    .modal-brand { font-size: 0.75rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .modal-name { font-family: var(--font); font-size: 1.7rem; margin-bottom: 12px; }
+    .modal-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .modal-meta-item .meta-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .modal-meta-item .meta-value { font-size: 0.88rem; }
+    .modal-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.65; margin-bottom: 20px; }
+    .modal-footer-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .modal-close-btn { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: var(--text); font-size: 1rem; display: flex; align-items: center; justify-content: center; z-index: 1; }
+
+    /* ── BRANDS SECTION (home) ── */
+    #brands-home { background: var(--surface); }
+    .brands-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 900px; margin: 0 auto; }
+    .brand-pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 30px; padding: 10px 22px; font-size: 0.88rem; cursor: pointer; transition: border-color .2s, color .2s; }
+    .brand-pill:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── DUPES ── */
+    #dupes-section { background: var(--bg); }
+    .dupes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; max-width: 960px; margin: 0 auto; }
+    .dupe-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color .2s; }
+    .dupe-card:hover { border-color: var(--gold); }
+    .dupe-img-area { height: 120px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 3rem; opacity: 0.65; }
+    .dupe-body { padding: 16px; }
+    .dupe-for { font-size: 0.72rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .dupe-name { font-family: var(--font); font-size: 0.98rem; margin-bottom: 6px; }
+    .similarity { font-size: 0.75rem; color: var(--muted); margin: 6px 0 10px; }
+    .similarity span { color: var(--gold); font-weight: 700; }
+
+    /* ── LEARN ── */
+    #learn-section { background: var(--surface); }
+    .learn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; max-width: 960px; margin: 0 auto; }
+    .learn-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 22px; cursor: pointer; transition: border-color .2s; }
+    .learn-card:hover { border-color: var(--gold); }
+    .learn-icon { font-size: 1.8rem; margin-bottom: 12px; }
+    .learn-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 6px; }
+    .learn-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+    .read-more { font-size: 0.78rem; color: var(--gold); font-weight: 600; }
+
+    /* ── COMMUNITY ── */
+    #community-section { background: var(--bg); }
+    .community-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+    .community-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 36px; }
+    .community-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: left; }
+    .cc-icon { font-size: 1.5rem; margin-bottom: 10px; }
+    .cc-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .cc-desc { font-size: 0.78rem; color: var(--muted); }
+    .newsletter { display: flex; gap: 10px; max-width: 440px; margin: 0 auto; }
+    .newsletter input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; color: var(--text); font-size: 0.88rem; outline: none; }
+    .newsletter input:focus { border-color: var(--gold); }
+    .newsletter input::placeholder { color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer { padding: 36px 5%; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; font-size: 0.8rem; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-socials { display: flex; gap: 14px; font-size: 1.1rem; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--gold); color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 0.88rem; transition: transform .3s; z-index: 300; pointer-events: none; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── NO RESULTS ── */
+    .no-results { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .no-results .icon { font-size: 3rem; margin-bottom: 16px; }
+
+    /* ── BACK BUTTON ── */
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.88rem; cursor: pointer; transition: color .2s; padding: 8px 0; }
+    .back-btn:hover { color: var(--gold); }
+
+    @media (max-width: 768px) {
+      .scent-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+      .newsletter { flex-direction: column; }
+      .hero-deco { display: none; }
+      .modal-meta-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════ -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">
+    <div class="icon">🌿</div>
+    <span>scently</span>
+  </div>
+  <ul class="nav-links">
+    <li><a onclick="showPage('home'); smoothTo('quiz-section')">Quiz</a></li>
+    <li><a onclick="showPage('browse')">Browse All</a></li>
+    <li><a onclick="showPage('home'); smoothTo('brands-home')">Brands</a></li>
+    <li><a onclick="showPage('home'); smoothTo('learn-section')">Learn</a></li>
+    <li><a onclick="showPage('home'); smoothTo('community-section')">Community</a></li>
+  </ul>
+  <button class="btn-primary" onclick="showPage('home'); smoothTo('quiz-section')">Take the Quiz</button>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     HOME PAGE
+════════════════════════════════════════════ -->
+<div class="page active" id="home-page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Find the perfect<br>fragrance for <em>you.</em></h1>
+      <p>A beginner-friendly non-profit guide. Take the quiz, explore 33 curated fragrances from 12 iconic houses, and find your signature scent — always free.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="smoothTo('quiz-section')">Take the Quiz</button>
+        <button class="btn-outline" onclick="showPage('browse')">Browse All</button>
+      </div>
+      <div class="hero-badges">
+        <div class="badge"><span>⭐</span><div><div>Beginner Friendly</div><div class="badge-sub">Plain-language guidance</div></div></div>
+        <div class="badge"><span>💰</span><div><div>Budget Filters</div><div class="badge-sub">Every price range</div></div></div>
+        <div class="badge"><span>🤝</span><div><div>Non-Profit</div><div class="badge-sub">No ads, no bias</div></div></div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="num">12</div><div class="label">Luxury brands</div></div>
+        <div class="stat-item"><div class="num">33+</div><div class="label">Fragrances</div></div>
+        <div class="stat-item"><div class="num">Free</div><div class="label">Always</div></div>
+      </div>
+    </div>
+    <div class="hero-deco">🧴</div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz-section">
+    <div class="section-header">
+      <h2>Find Your Scent</h2>
+      <p>Answer 7 quick questions and we'll match you with your perfect fragrance.</p>
+    </div>
+    <div class="quiz-container">
+
+      <!-- Step 1 -->
+      <div class="quiz-step active" id="step-1">
+        <div class="quiz-progress"><span class="step-label">Step 1 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:14%"></div></div></div>
+        <div class="quiz-question">What's your experience with fragrances?</div>
+        <div class="quiz-sub">Choose the one that best describes you.</div>
+        <div class="option-list">
+          <label class="option-card"><input type="radio" name="exp" value="new"><div><div class="option-title">Complete beginner</div><div class="option-desc">I've never really paid attention to scent</div></div></label>
+          <label class="option-card"><input type="radio" name="exp" value="some"><div><div class="option-title">Some exposure</div><div class="option-desc">I have a favourite but want to explore more</div></div></label>
+          <label class="option-card"><input type="radio" name="exp" value="collector"><div><div class="option-title">Growing collector</div><div class="option-desc">I own several and love discovering more</div></div></label>
+        </div>
+        <div class="quiz-actions"><span></span><button class="btn-primary" onclick="goStep(2)">Next →</button></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="quiz-step" id="step-2">
+        <div class="quiz-progress"><span class="step-label">Step 2 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:28%"></div></div></div>
+        <div class="quiz-question">What scents do you enjoy most?</div>
+        <div class="quiz-sub">Choose up to 3 options.</div>
+        <div class="scent-grid" id="scent-grid">
+          <div class="scent-card" data-scent="fresh" onclick="toggleScent(this)"><div class="scent-img-icon">🌿</div><div class="scent-name">Fresh / Clean</div></div>
+          <div class="scent-card" data-scent="citrus" onclick="toggleScent(this)"><div class="scent-img-icon">🍋</div><div class="scent-name">Citrus</div></div>
+          <div class="scent-card" data-scent="sweet" onclick="toggleScent(this)"><div class="scent-img-icon">🍫</div><div class="scent-name">Sweet / Gourmand</div></div>
+          <div class="scent-card" data-scent="woody" onclick="toggleScent(this)"><div class="scent-img-icon">🪵</div><div class="scent-name">Woody</div></div>
+          <div class="scent-card" data-scent="spicy" onclick="toggleScent(this)"><div class="scent-img-icon">🌶️</div><div class="scent-name">Spicy</div></div>
+          <div class="scent-card" data-scent="aquatic" onclick="toggleScent(this)"><div class="scent-img-icon">💧</div><div class="scent-name">Aquatic</div></div>
+          <div class="scent-card" data-scent="floral" onclick="toggleScent(this)"><div class="scent-img-icon">🌸</div><div class="scent-name">Floral</div></div>
+          <div class="scent-card" data-scent="amber" onclick="toggleScent(this)"><div class="scent-img-icon">🍂</div><div class="scent-name">Warm / Amber</div></div>
+        </div>
+        <div class="quiz-actions"><button class="btn-outline" onclick="goStep(1)">← Back</button><button class="btn-primary" onclick="goStep(3)">Next →</button></div>
+        <div class="quiz-tip">💡 <strong>Tip:</strong> Visit the <a style="color:var(--gold);cursor:pointer" onclick="smoothTo('learn-section')">Learn section</a> to understand each scent family.</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="quiz-step" id="step-3">
+        <div class="quiz-progress"><span class="step-label">Step 3 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div></div>
+        <div class="quiz-question">Do you spend more time indoors or outdoors?</div>
+        <div class="quiz-sub">This helps match projection and longevity to your lifestyle.</div>
+        <div class="option-list">
+          <label class="option-card"><input type="radio" name="setting" value="indoor"><div><div class="option-title">Mostly indoors</div><div class="option-desc">Office, home, indoor environments most of the day</div></div></label>
+          <label class="option-card"><input type="radio" name="setting" value="mixed"><div><div class="option-title">A mix of both</div><div class="option-desc">I move between indoors and outdoors regularly</div></div></label>
+          <label class="option-card"><input type="radio" name="setting" value="outdoor"><div><div class="option-title">Mostly outdoors</div><div class="option-desc">Active lifestyle, outdoors, travel, sports</div></div></label>
+        </div>
+        <div class="quiz-actions"><button class="btn-outline" onclick="goStep(2)">← Back</button><button class="btn-primary" onclick="goStep(4)">Next →</button></div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="quiz-step" id="step-4">
+        <div class="quiz-progress"><span class="step-label">Step 4 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:57%"></div></div></div>
+        <div class="quiz-question">What climate do you live in?</div>
+        <div class="quiz-sub">Heat and humidity change how a fragrance performs on your skin.</div>
+        <div class="option-list">
+          <label class="option-card"><input type="radio" name="climate" value="hot"><div><div class="option-title">Hot & humid</div><div class="option-desc">Tropical or warm year-round (e.g. Singapore, SE Asia)</div></div></label>
+          <label class="option-card"><input type="radio" name="climate" value="temperate"><div><div class="option-title">Temperate / mild</div><div class="option-desc">Four seasons, moderate temperatures</div></div></label>
+          <label class="option-card"><input type="radio" name="climate" value="cold"><div><div class="option-title">Cold & dry</div><div class="option-desc">Cold winters, lower humidity</div></div></label>
+        </div>
+        <div class="quiz-actions"><button class="btn-outline" onclick="goStep(3)">← Back</button><button class="btn-primary" onclick="goStep(5)">Next →</button></div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="quiz-step" id="step-5">
+        <div class="quiz-progress"><span class="step-label">Step 5 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:71%"></div></div></div>
+        <div class="quiz-question">Do you prefer a stronger or lighter scent?</div>
+        <div class="quiz-sub">Think about how much you want others to notice.</div>
+        <div class="option-list">
+          <label class="option-card"><input type="radio" name="strength" value="light"><div><div class="option-title">Light & subtle</div><div class="option-desc">A soft skin scent — only noticeable up close</div></div></label>
+          <label class="option-card"><input type="radio" name="strength" value="moderate"><div><div class="option-title">Moderate presence</div><div class="option-desc">Noticeable but not overwhelming</div></div></label>
+          <label class="option-card"><input type="radio" name="strength" value="strong"><div><div class="option-title">Bold & powerful</div><div class="option-desc">Strong sillage — leaves a lasting impression</div></div></label>
+        </div>
+        <div class="quiz-actions"><button class="btn-outline" onclick="goStep(4)">← Back</button><button class="btn-primary" onclick="goStep(6)">Next →</button></div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="quiz-step" id="step-6">
+        <div class="quiz-progress"><span class="step-label">Step 6 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:85%"></div></div></div>
+        <div class="quiz-question">Which fragrance direction suits you?</div>
+        <div class="quiz-sub">Fragrance has no rules — choose whatever feels right.</div>
+        <div class="option-list">
+          <label class="option-card"><input type="radio" name="gender" value="masculine"><div><div class="option-title">Masculine leaning</div><div class="option-desc">Bold, woody, spicy profiles</div></div></label>
+          <label class="option-card"><input type="radio" name="gender" value="feminine"><div><div class="option-title">Feminine leaning</div><div class="option-desc">Floral, soft, elegant profiles</div></div></label>
+          <label class="option-card"><input type="radio" name="gender" value="unisex"><div><div class="option-title">Unisex / anything</div><div class="option-desc">Open to all — just find me the best scent</div></div></label>
+        </div>
+        <div class="quiz-actions"><button class="btn-outline" onclick="goStep(5)">← Back</button><button class="btn-primary" onclick="goStep(7)">Next →</button></div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="quiz-step" id="step-7">
+        <div class="quiz-progress"><span class="step-label">Step 7 of 7</span><div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div></div>
+        <div class="quiz-question">What's your budget? (USD)</div>
+        <div class="quiz-sub">We'll filter your matches to what you're comfortable spending.</div>
+        <div class="option-list">
+          <label class="option-card"><input type="radio" name="budget" value="0-100"><div><div class="option-title">Under $100</div><div class="option-desc">Entry-level and accessible picks</div></div></label>
+          <label class="option-card"><input type="radio" name="budget" value="100-200"><div><div class="option-title">$100 – $200</div><div class="option-desc">Mid-range designer fragrances</div></div></label>
+          <label class="option-card"><input type="radio" name="budget" value="200-300"><div><div class="option-title">$200 – $300</div><div class="option-desc">Premium designer & entry niche</div></div></label>
+          <label class="option-card"><input type="radio" name="budget" value="300-400"><div><div class="option-title">$300 – $400</div><div class="option-desc">High-end niche fragrances</div></div></label>
+          <label class="option-card"><input type="radio" name="budget" value="400+"><div><div class="option-title">$400+</div><div class="option-desc">Ultra-premium & collector pieces</div></div></label>
+        </div>
+        <div class="quiz-actions">
+          <button class="btn-outline" onclick="goStep(6)">← Back</button>
+          <button class="btn-primary" onclick="runQuiz()">See My Matches ✨</button>
+        </div>
+        <div class="quiz-tip">💡 <strong>Tip:</strong> The more questions you answer, the more accurate your results.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- HOME RESULTS -->
+  <section id="home-results">
+    <div class="section-header">
+      <h2 id="home-results-title">Top Picks</h2>
+      <p id="home-results-subtitle">A selection from our curated collection. Take the quiz for personalised matches.</p>
+    </div>
+    <div class="home-frag-grid" id="home-frag-grid"></div>
+    <div id="home-no-results" class="no-results" style="display:none">
+      <div class="icon">🔍</div><p>No matches found. Try adjusting your filters.</p>
+    </div>
+    <div style="text-align:center;margin-top:32px;">
+      <button class="btn-outline" onclick="showPage('browse')">View All Fragrances by Brand →</button>
+    </div>
+  </section>
+
+  <!-- BRANDS -->
+  <section id="brands-home" style="background:var(--surface)">
+    <div class="section-header">
+      <h2>Browse by Brand</h2>
+      <p>Click any brand to explore their full collection.</p>
+    </div>
+    <div class="brands-grid" id="brands-grid-home"></div>
+  </section>
+
+  <!-- DUPES -->
+  <section id="dupes-section">
+    <div class="section-header">
+      <h2>Popular Dupes</h2>
+      <p>Same soul, friendlier price tag. Community-vetted alternatives.</p>
+    </div>
+    <div class="dupes-grid">
+      <div class="dupe-card"><div class="dupe-img-area">🌿</div><div class="dupe-body"><div class="dupe-for">Dupe for Dior Sauvage</div><div class="dupe-name">Al Haramain Detour Noir</div><div class="frag-tags"><span class="tag">Fresh</span><span class="tag">Spicy</span><span class="tag">Woody</span></div><div class="similarity">Similarity: <span>80–90%</span></div><div style="margin-bottom:12px;font-size:0.88rem;">~$18–$28 USD</div><button class="btn-outline btn-sm" style="width:100%">View Details</button></div></div>
+      <div class="dupe-card"><div class="dupe-img-area">⛰️</div><div class="dupe-body"><div class="dupe-for">Dupe for Chanel Bleu</div><div class="dupe-name">Montblanc Explorer</div><div class="frag-tags"><span class="tag">Fresh</span><span class="tag">Woody</span><span class="tag">Aromatic</span></div><div class="similarity">Similarity: <span>75–80%</span></div><div style="margin-bottom:12px;font-size:0.88rem;">~$35–$55 USD</div><button class="btn-outline btn-sm" style="width:100%">View Details</button></div></div>
+      <div class="dupe-card"><div class="dupe-img-area">🪢</div><div class="dupe-body"><div class="dupe-for">Dupe for Tom Ford Oud Wood</div><div class="dupe-name">Zara Oud Couture</div><div class="frag-tags"><span class="tag">Woody</span><span class="tag">Oud</span><span class="tag">Spicy</span></div><div class="similarity">Similarity: <span>70–75%</span></div><div style="margin-bottom:12px;font-size:0.88rem;">~$12–$20 USD</div><button class="btn-outline btn-sm" style="width:100%">View Details</button></div></div>
+    </div>
+  </section>
+
+  <!-- LEARN -->
+  <section id="learn-section" style="background:var(--surface)">
+    <div class="section-header">
+      <h2>Learn About Fragrances</h2>
+      <p>Understand the basics and become a fragrance expert.</p>
+    </div>
+    <div class="learn-grid">
+      <div class="learn-card"><div class="learn-icon">🎵</div><div class="learn-title">Top, Heart & Base Notes</div><div class="learn-desc">Learn how notes create a fragrance's character and how it evolves over time.</div><div class="read-more">Read More →</div></div>
+      <div class="learn-card"><div class="learn-icon">⏱️</div><div class="learn-title">Longevity vs Projection</div><div class="learn-desc">What's the difference and why both matter when choosing a fragrance.</div><div class="read-more">Read More →</div></div>
+      <div class="learn-card"><div class="learn-icon">🌺</div><div class="learn-title">Fragrance Families</div><div class="learn-desc">Explore categories: floral, oriental, woody, fresh, fougère, and more.</div><div class="read-more">Read More →</div></div>
+      <div class="learn-card"><div class="learn-icon">🌡️</div><div class="learn-title">Scent & Climate</div><div class="learn-desc">How heat and humidity change how a fragrance smells on your skin.</div><div class="read-more">Read More →</div></div>
+      <div class="learn-card"><div class="learn-icon">🧪</div><div class="learn-title">How to Test Fragrances</div><div class="learn-desc">The right way to test before buying — avoid costly mistakes.</div><div class="read-more">Read More →</div></div>
+      <div class="learn-card"><div class="learn-icon">🌱</div><div class="learn-title">Ingredients 101</div><div class="learn-desc">Common ingredients and what they actually smell like in real life.</div><div class="read-more">Read More →</div></div>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="community-section">
+    <div class="community-inner">
+      <h2 style="font-family:var(--font);font-size:clamp(1.8rem,3vw,2.4rem);margin-bottom:14px;">Join the Community</h2>
+      <p style="color:var(--muted);font-size:0.95rem;margin-bottom:36px;">Connect with fragrance lovers, share your collection, and get personal recommendations — always free.</p>
+      <div class="community-cards">
+        <div class="community-card"><div class="cc-icon">💬</div><div class="cc-title">Forums</div><div class="cc-desc">Discuss favourites and get advice from the community.</div></div>
+        <div class="community-card"><div class="cc-icon">⭐</div><div class="cc-title">Reviews</div><div class="cc-desc">Honest community reviews on thousands of scents.</div></div>
+        <div class="community-card"><div class="cc-icon">🗂️</div><div class="cc-title">Collections</div><div class="cc-desc">Track your bottles and wishlist new ones.</div></div>
+        <div class="community-card"><div class="cc-icon">🤝</div><div class="cc-title">Swap & Share</div><div class="cc-desc">Trade decants and samples with nearby members.</div></div>
+      </div>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:16px;">Stay in the loop — get tips, new releases, and exclusive content.</p>
+      <div class="newsletter">
+        <input type="email" placeholder="Enter your email"/>
+        <button class="btn-primary">Subscribe</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div style="display:flex;align-items:center;gap:8px;font-family:var(--font);">
+      🌿 scently <span style="color:var(--border)">|</span>
+      <span style="font-size:0.78rem;color:var(--muted)">A non-profit fragrance community</span>
+    </div>
+    <span>© 2026 Scently. All rights reserved.</span>
+    <div class="footer-links"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Contact</a></div>
+    <div class="footer-socials"><a href="#">📸</a><a href="#">🎵</a><a href="#">📌</a></div>
+  </footer>
+
+</div><!-- /home-page -->
+
+<!-- ════════════════════════════════════════════
+     BROWSE PAGE
+════════════════════════════════════════════ -->
+<div class="page" id="browse-page">
+  <div class="browse-header">
+    <div class="back-btn" onclick="showPage('home')">← Back to Home</div>
+    <h1>Browse All Fragrances</h1>
+    <p>Every fragrance in our collection, grouped by brand. Click any card for full notes and details.</p>
+    <div class="browse-filters">
+      <select class="filter-select" id="b-scent" onchange="renderBrowse()">
+        <option value="">All Scent Families</option>
+        <option value="fresh">Fresh / Clean</option>
+        <option value="citrus">Citrus</option>
+        <option value="floral">Floral</option>
+        <option value="woody">Woody</option>
+        <option value="spicy">Spicy</option>
+        <option value="amber">Warm / Amber</option>
+        <option value="aquatic">Aquatic</option>
+        <option value="sweet">Sweet / Gourmand</option>
+      </select>
+      <select class="filter-select" id="b-budget" onchange="renderBrowse()">
+        <option value="">All Prices (USD)</option>
+        <option value="0-100">Under $100</option>
+        <option value="100-200">$100 – $200</option>
+        <option value="200-300">$200 – $300</option>
+        <option value="300-400">$300 – $400</option>
+        <option value="400+">$400+</option>
+      </select>
+      <select class="filter-select" id="b-gender" onchange="renderBrowse()">
+        <option value="">Any Direction</option>
+        <option value="masculine">Masculine</option>
+        <option value="feminine">Feminine</option>
+        <option value="unisex">Unisex</option>
+      </select>
+      <select class="filter-select" id="b-strength" onchange="renderBrowse()">
+        <option value="">Any Strength</option>
+        <option value="light">Light & Subtle</option>
+        <option value="moderate">Moderate</option>
+        <option value="strong">Bold & Strong</option>
+      </select>
+      <button class="btn-outline btn-sm" onclick="clearBrowseFilters()">Clear</button>
+    </div>
+  </div>
+  <div class="browse-body" id="browse-body"></div>
+
+  <footer style="margin-top:0">
+    <div style="display:flex;align-items:center;gap:8px;font-family:var(--font);">
+      🌿 scently <span style="color:var(--border)">|</span>
+      <span style="font-size:0.78rem;color:var(--muted)">A non-profit fragrance community</span>
+    </div>
+    <span>© 2026 Scently. All rights reserved.</span>
+    <div class="footer-links"><a href="#">Privacy Policy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+  </footer>
+</div><!-- /browse-page -->
+
+<!-- ════════════════════════════════════════════
+     MODAL
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal" onclick="maybeCloseModal(event)">
+  <div class="modal" id="modal-inner">
+    <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    <div class="modal-img-wrap">
+      <img id="modal-img" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('modal-emoji-lg').style.display='block'"/>
+      <div id="modal-emoji-lg" class="modal-emoji-lg"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-brand" id="m-brand"></div>
+      <div class="modal-name" id="m-name"></div>
+      <div class="frag-tags" id="m-tags" style="margin-bottom:14px;"></div>
+
+      <!-- Notes Pyramid -->
+      <div class="notes-pyramid" id="m-notes"></div>
+
+      <div class="modal-meta-grid">
+        <div class="modal-meta-item"><div class="meta-label">Best For</div><div class="meta-value" id="m-best"></div></div>
+        <div class="modal-meta-item"><div class="meta-label">Strength</div><div class="meta-value" id="m-strength"></div></div>
+        <div class="modal-meta-item"><div class="meta-label">Climate</div><div class="meta-value" id="m-climate"></div></div>
+        <div class="modal-meta-item"><div class="meta-label">Price (USD)</div><div class="meta-value" id="m-price"></div></div>
+      </div>
+      <div class="modal-desc" id="m-desc"></div>
+      <div class="modal-footer-btns">
+        <a id="m-link" href="#" target="_blank" rel="noopener noreferrer"><button class="btn-primary">Buy Now ↗</button></a>
+        <button class="btn-outline" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────
+// FRAGRANCE DATABASE — with full note pyramids
+// img: replace "" with a direct image URL
+// ─────────────────────────────────────────
+const DB = [
+  // ── DIOR ──
+  { id:1, brand:"Dior", name:"Sauvage EDT", emoji:"🧴", img:"",
+    tags:["fresh","spicy","woody"], gender:"masculine", strength:"moderate",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Bergamot","Pepper"], heart:["Sichuan Pepper","Lavender","Pink Pepper","Vetiver","Patchouli","Geranium","Elemi"], base:["Ambroxan","Cedar","Labdanum"] },
+    bestFor:"Daily wear, outdoors, all seasons",
+    desc:"A radically fresh composition anchored by Ambroxan — a woody-sensual molecule. Bergamot and pepper burst open into a warm, woody ambery base. One of the best-selling fragrances in the world.",
+    price:95, priceLabel:"~$95–$115 USD", link:"[dior.com](https://www.dior.com/en_us/beauty/fragrance/mens-fragrance)" },
+
+  { id:2, brand:"Dior", name:"Sauvage EDP", emoji:"🧴", img:"",
+    tags:["spicy","woody","amber"], gender:"masculine", strength:"strong",
+    climate:["temperate","cold"], setting:["indoor","mixed"],
+    notes:{ top:["Bergamot"], heart:["Sichuan Pepper","Lavender","Star Anise","Nutmeg","Vetiver","Patchouli"], base:["Ambroxan","Vanilla","Hawthorn Accord"] },
+    bestFor:"Evening, dates, cooler weather",
+    desc:"The EDP takes Sauvage deeper and warmer — more animalic, more sensual, more nocturnal. Vanilla and hawthorn add a sweet richness to the iconic ambroxan base.",
+    price:110, priceLabel:"~$110–$135 USD", link:"[dior.com](https://www.dior.com/en_us/beauty/fragrance/mens-fragrance)" },
+
+  { id:3, brand:"Dior", name:"Miss Dior Blooming Bouquet EDT", emoji:"🌸", img:"",
+    tags:["floral","fresh","sweet"], gender:"feminine", strength:"light",
+    climate:["hot","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Calabrian Bergamot","Pear"], heart:["Peony","Damascus Rose","Rose de Grasse"], base:["White Musk","Patchouli","Blond Wood"] },
+    bestFor:"Daytime, spring, everyday feminine",
+    desc:"A light, airy bouquet of peony and rose lifted by bergamot and pear. Elegant, approachable, and universally loved — the ideal first fragrance.",
+    price:85, priceLabel:"~$85–$105 USD", link:"[dior.com](https://www.dior.com/en_us/beauty/fragrance/womens-fragrance)" },
+
+  // ── CHANEL ──
+  { id:4, brand:"Chanel", name:"Bleu de Chanel EDP", emoji:"🌊", img:"",
+    tags:["fresh","woody","citrus"], gender:"masculine", strength:"moderate",
+    climate:["temperate","cold"], setting:["indoor","mixed"],
+    notes:{ top:["Citrus","Mint","Pink Pepper","Grapefruit"], heart:["Ginger","Nutmeg","Jasmine","Iso E Super"], base:["Labdanum","Sandalwood","Patchouli","Vetiver","Incense"] },
+    bestFor:"Office, formal occasions, cool weather",
+    desc:"Sophisticated and effortlessly refined. A woody aromatic that flows from citrus through to deep sandalwood and incense. Timeless enough for any occasion.",
+    price:115, priceLabel:"~$115–$145 USD", link:"[chanel.com](https://www.chanel.com/us/fragrance/men/)" },
+
+  { id:5, brand:"Chanel", name:"Coco Mademoiselle EDP", emoji:"🌹", img:"",
+    tags:["floral","amber","citrus"], gender:"feminine", strength:"moderate",
+    climate:["temperate","cold"], setting:["indoor","mixed"],
+    notes:{ top:["Orange","Bergamot","Grapefruit","Mandarin"], heart:["Rose","Jasmine","Mimosa","Ylang-Ylang"], base:["Patchouli","Vetiver","Vanilla","White Musk","Opoponax"] },
+    bestFor:"Dates, evenings, autumn & winter",
+    desc:"A bold oriental-fresh fragrance built on the tension between fresh citrus and rich patchouli. A modern classic that has defined feminine elegance for two decades.",
+    price:120, priceLabel:"~$120–$155 USD", link:"[chanel.com](https://www.chanel.com/us/fragrance/women/)" },
+
+  { id:6, brand:"Chanel", name:"Chance Eau Tendre EDP", emoji:"🍑", img:"",
+    tags:["floral","fresh","citrus"], gender:"feminine", strength:"light",
+    climate:["hot","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Grapefruit","Quince"], heart:["Hyacinth","Jasmine","Rose","White Cedar"], base:["Musk","Iris","Amber"] },
+    bestFor:"Everyday, spring, gifting",
+    desc:"Luminous and cheerful, Chance Eau Tendre blossoms with grapefruit and quince before settling into a soft floral heart. Fresh, clean, and endlessly likeable.",
+    price:105, priceLabel:"~$105–$130 USD", link:"[chanel.com](https://www.chanel.com/us/fragrance/women/)" },
+
+  // ── YSL ──
+  { id:7, brand:"YSL", name:"Y Eau de Parfum", emoji:"⚡", img:"",
+    tags:["fresh","woody","aromatic"], gender:"masculine", strength:"moderate",
+    climate:["temperate","hot"], setting:["mixed","outdoor"],
+    notes:{ top:["Bergamot","Ginger","Apple"], heart:["Sage","Juniper Berries","Geranium"], base:["Amberwood","Cedar","Ambers"] },
+    bestFor:"Dates, evenings, year-round",
+    desc:"Bold and energetic, Y EDP combines bergamot and sage with a warm amberwood base. Confident, contemporary, and magnetically attractive.",
+    price:90, priceLabel:"~$90–$115 USD", link:"[yslbeauty.com](https://www.yslbeauty.com/us/fragrance/men/)" },
+
+  { id:8, brand:"YSL", name:"Black Opium EDP", emoji:"☕", img:"",
+    tags:["sweet","spicy","amber"], gender:"feminine", strength:"strong",
+    climate:["cold","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Pink Pepper","Orange Blossom","Pear"], heart:["Coffee","Jasmine","Bitter Almond"], base:["Patchouli","Vanilla","Cedar","Cashmere Wood"] },
+    bestFor:"Evenings, autumn, winter, nights out",
+    desc:"Addictive and daring — a caffeine-fuelled oriental built on coffee, white flowers, and vanilla. The fragrance equivalent of a double espresso at midnight.",
+    price:98, priceLabel:"~$98–$125 USD", link:"[yslbeauty.com](https://www.yslbeauty.com/us/fragrance/women/)" },
+
+  { id:9, brand:"YSL", name:"Libre EDP", emoji:"🔥", img:"",
+    tags:["floral","amber","sweet"], gender:"feminine", strength:"moderate",
+    climate:["temperate","cold"], setting:["indoor","mixed"],
+    notes:{ top:["Mandarin","Petitgrain"], heart:["Lavender","Orange Blossom Absolute","African Marigold"], base:["Musk","Vanilla","Ambergris","Cedar"] },
+    bestFor:"Evening, cool weather, dates",
+    desc:"A daring floral-oriental that fuses lavender with orange blossom — unexpected and magnetic. Libre is about freedom, expressed in scent.",
+    price:100, priceLabel:"~$100–$130 USD", link:"[yslbeauty.com](https://www.yslbeauty.com/us/fragrance/women/)" },
+
+  // ── TOM FORD ──
+  { id:10, brand:"Tom Ford", name:"Oud Wood EDP", emoji:"🪵", img:"",
+    tags:["woody","spicy","amber"], gender:"unisex", strength:"moderate",
+    climate:["cold","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Rosewood","Cardamom","Chinese Pepper"], heart:["Oud Wood","Sandalwood","Vetiver"], base:["Tonka Bean","Amber","Vanilla"] },
+    bestFor:"Evening, autumn & winter, special occasions",
+    desc:"Tom Ford's pioneering oud fragrance — the one that introduced many Westerners to oud. Rosewood and cardamom open before yielding to a warm, creamy sandalwood-vanilla base.",
+    price:195, priceLabel:"~$195–$240 USD", link:"[tomford.com](https://www.tomford.com/fragrance/)" },
+
+  { id:11, brand:"Tom Ford", name:"Black Orchid EDP", emoji:"🖤", img:"",
+    tags:["floral","spicy","amber"], gender:"unisex", strength:"strong",
+    climate:["cold","temperate"], setting:["indoor"],
+    notes:{ top:["Truffle","Gardenia","Black Currant","Ylang-Ylang","Jasmine","Bergamot"], heart:["Black Orchid","Fruity Notes","Lotus Wood","Patchouli","Vetiver"], base:["Incense","Sandalwood","Dark Chocolate","Vanilla","Amber","Balsam"] },
+    bestFor:"Special occasions, winter evenings",
+    desc:"Sumptuous and dark — a gothic floral with truffle, black orchid, and chocolate. One of the most theatrical and distinctive fragrances in modern perfumery.",
+    price:185, priceLabel:"~$185–$230 USD", link:"[tomford.com](https://www.tomford.com/fragrance/)" },
+
+  { id:12, brand:"Tom Ford", name:"Neroli Portofino EDT", emoji:"🍊", img:"",
+    tags:["citrus","fresh","floral"], gender:"unisex", strength:"light",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Neroli","Bergamot","Mandarin Orange","Lemon","Grapefruit"], heart:["Thyme","Rosemary","Lavender","Pittosporum","Jasmine"], base:["Amber","Oakmoss","Angelica Root"] },
+    bestFor:"Summer, resort, outdoors",
+    desc:"An evocation of the Italian Riviera — neroli, citrus, and sea air captured in a bottle. Radiant, optimistic, and effortlessly transportive.",
+    price:165, priceLabel:"~$165–$210 USD", link:"[tomford.com](https://www.tomford.com/fragrance/)" },
+
+  // ── PRADA ──
+  { id:13, brand:"Prada", name:"Luna Rossa Carbon EDT", emoji:"🚀", img:"",
+    tags:["fresh","aquatic","woody"], gender:"masculine", strength:"moderate",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Bergamot","Lavender"], heart:["Carbon Accord","Ambergris","Patchouli"], base:["Rubber","Cashmere Wood","Vetiver"] },
+    bestFor:"Sport, outdoors, summer",
+    desc:"Futuristic and sporty — Luna Rossa Carbon fuses lavender with a cutting-edge carbon accord and ambergris. Dynamic and clean for active lifestyles.",
+    price:82, priceLabel:"~$82–$100 USD", link:"[prada.com](https://www.prada.com/us/en/beauty/fragrance)" },
+
+  { id:14, brand:"Prada", name:"Paradoxe EDP", emoji:"🌙", img:"",
+    tags:["floral","fresh","woody"], gender:"feminine", strength:"moderate",
+    climate:["temperate","hot"], setting:["indoor","mixed"],
+    notes:{ top:["Neroli Supercritical","Aldehydes"], heart:["Jasmine Sambac Absolute","Cashmeran"], base:["Musk","Amber","Sandalwood"] },
+    bestFor:"Daily wear, all seasons",
+    desc:"A fragrance of contrasts — simultaneously classic and futuristic, soft and bold. Neroli and jasmine bloom over a warm cashmeran and sandalwood base.",
+    price:95, priceLabel:"~$95–$120 USD", link:"[prada.com](https://www.prada.com/us/en/beauty/fragrance)" },
+
+  // ── HERMÈS ──
+  { id:15, brand:"Hermès", name:"H24 EDT", emoji:"🌿", img:"",
+    tags:["fresh","woody","aromatic"], gender:"masculine", strength:"light",
+    climate:["hot","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Clary Sage","Sclarene"], heart:["Narcissus","Rosewood"], base:["Cedar","Green Wood"] },
+    bestFor:"Office, daily wear, warm weather",
+    desc:"A radically modern fougère built on the new synthetic ingredient Sclarene. Quiet, contemplative, and effortlessly stylish — confidence without shouting.",
+    price:110, priceLabel:"~$110–$135 USD", link:"[hermes.com](https://www.hermes.com/us/en/category/beauty/fragrances/)" },
+
+  { id:16, brand:"Hermès", name:"Twilly d'Hermès EDP", emoji:"🎀", img:"",
+    tags:["floral","spicy","sweet"], gender:"feminine", strength:"moderate",
+    climate:["temperate","hot"], setting:["indoor","mixed"],
+    notes:{ top:["Ginger","Tuberose"], heart:["Tuberose","Rose"], base:["Sandalwood","Vetiver"] },
+    bestFor:"Daily wear, spring, playful feminine",
+    desc:"Young, energetic, and spirited — Twilly pairs raw ginger with tuberose for a surprising tension. Playful and feminine, it's Hermès from a new generation's perspective.",
+    price:120, priceLabel:"~$120–$150 USD", link:"[hermes.com](https://www.hermes.com/us/en/category/beauty/fragrances/)" },
+
+  // ── JO MALONE ──
+  { id:17, brand:"Jo Malone", name:"Wood Sage & Sea Salt Cologne", emoji:"🌊", img:"",
+    tags:["fresh","aquatic","woody"], gender:"unisex", strength:"light",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Ambrette (Musk Mallow)"], heart:["Sea Salt","Sage"], base:["Driftwood"] },
+    bestFor:"Summer, outdoors, coastal living",
+    desc:"A windswept walk along a coastal cliff captured in fragrance. Sea salt and sage play against soft ambrette and warm driftwood. Jo Malone's most beloved unisex scent.",
+    price:145, priceLabel:"~$145–$175 USD", link:"[jomalone.com](https://www.jomalone.com/us/)" },
+
+  { id:18, brand:"Jo Malone", name:"Peony & Blush Suede Cologne", emoji:"🌷", img:"",
+    tags:["floral","sweet","amber"], gender:"feminine", strength:"light",
+    climate:["temperate","hot"], setting:["indoor","mixed"],
+    notes:{ top:["Red Apple"], heart:["Peony","Jasmine","Gillyflower","Rose"], base:["Suede"] },
+    bestFor:"Spring, gifting, romantic occasions",
+    desc:"Opulent and inviting — Peony & Blush Suede is a soft floral built on a buttery suede base. One of the most gifted fragrances in the world, and for good reason.",
+    price:150, priceLabel:"~$150–$185 USD", link:"[jomalone.com](https://www.jomalone.com/us/)" },
+
+  { id:19, brand:"Jo Malone", name:"Lime Basil & Mandarin Cologne", emoji:"🍋", img:"",
+    tags:["citrus","fresh","aromatic"], gender:"unisex", strength:"light",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Mandarin Orange","Lime"], heart:["Basil","White Thyme"], base:["Amber","Patchouli","Oakmoss"] },
+    bestFor:"Hot weather, daily wear, tropical climate",
+    desc:"Jo Malone's original iconic scent. Zesty lime and mandarin fused with aromatic basil and thyme — it smells like a Mediterranean herb garden in sunlight.",
+    price:145, priceLabel:"~$145–$175 USD", link:"[jomalone.com](https://www.jomalone.com/us/)" },
+
+  // ── DIPTYQUE ──
+  { id:20, brand:"Diptyque", name:"Philosykos EDT", emoji:"🌿", img:"",
+    tags:["woody","fresh","aromatic"], gender:"unisex", strength:"light",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Fig Tree Leaves"], heart:["Fig Wood"], base:["White Cedar","Fig"] },
+    bestFor:"Summer, outdoors, natural lovers",
+    desc:"A fig tree captured entirely — the milky sap of the branch, the rough bark, the green leaves. Creamy, fresh, woody, and meditative. A desert-island fragrance.",
+    price:155, priceLabel:"~$155–$190 USD", link:"[diptyqueparis.com](https://www.diptyqueparis.com/en_us/c/fragrances.html)" },
+
+  { id:21, brand:"Diptyque", name:"Eau Rose EDT", emoji:"🌹", img:"",
+    tags:["floral","fresh","citrus"], gender:"feminine", strength:"light",
+    climate:["hot","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Lychee"], heart:["Turkish Rose","Rose de Mai","Litchi"], base:["Musk","White Musk"] },
+    bestFor:"Daily wear, gifting, spring",
+    desc:"A modern, luminous rose that leads with lychee for an unexpected freshness. Neither powdery nor heavy — just a beautiful, transparent rose for everyday wear.",
+    price:145, priceLabel:"~$145–$180 USD", link:"[diptyqueparis.com](https://www.diptyqueparis.com/en_us/c/fragrances.html)" },
+
+  { id:22, brand:"Diptyque", name:"Tam Dao EDP", emoji:"🪵", img:"",
+    tags:["woody","spicy","fresh"], gender:"unisex", strength:"moderate",
+    climate:["temperate","cold"], setting:["indoor","mixed"],
+    notes:{ top:["Cypress","Rosewood"], heart:["Sandalwood","Myanmar Sandalwood"], base:["White Musk","Spices"] },
+    bestFor:"Cool weather, evenings, office",
+    desc:"A meditation on sandalwood — creamy, milky, serene. Cypress and rosewood open before a warm, powdery Myanmar sandalwood takes over. Deeply calming and contemplative.",
+    price:165, priceLabel:"~$165–$205 USD", link:"[diptyqueparis.com](https://www.diptyqueparis.com/en_us/c/fragrances.html)" },
+
+  // ── MAISON MARGIELA ──
+  { id:23, brand:"Maison Margiela", name:"Replica Beach Walk EDT", emoji:"🏖️", img:"",
+    tags:["fresh","citrus","aquatic"], gender:"unisex", strength:"light",
+    climate:["hot","temperate"], setting:["outdoor","mixed"],
+    notes:{ top:["Bergamot","Lemon","Pink Pepper"], heart:["Coconut Milk","Heliotrope"], base:["Musk","Driftwood","Ambergris"] },
+    bestFor:"Summer, hot weather, casual everyday",
+    desc:"The memory of a sun-soaked afternoon on the beach. Bergamot and lemon open into coconut milk and heliotrope before a warm driftwood base. Joyful and uncomplicated.",
+    price:145, priceLabel:"~$145–$175 USD", link:"[maisonmargiela.com](https://www.maisonmargiela.com/us/fragrance/replica/)" },
+
+  { id:24, brand:"Maison Margiela", name:"Replica Jazz Club EDT", emoji:"🎷", img:"",
+    tags:["woody","spicy","amber"], gender:"masculine", strength:"moderate",
+    climate:["cold","temperate"], setting:["indoor"],
+    notes:{ top:["Pink Pepper","Lemon","Neroli"], heart:["Tobacco Leaf","Vetiver","Clary Sage"], base:["Rum","Musk","Vanilla"] },
+    bestFor:"Evenings, autumn, cool settings",
+    desc:"The warmth of a jazz club at night — rum, tobacco, and vetiver under dim light. One of the most evocative and wearable masculine fragrances available.",
+    price:145, priceLabel:"~$145–$175 USD", link:"[maisonmargiela.com](https://www.maisonmargiela.com/us/fragrance/replica/)" },
+
+  { id:25, brand:"Maison Margiela", name:"Replica Flower Market EDT", emoji:"🌸", img:"",
+    tags:["floral","fresh","sweet"], gender:"feminine", strength:"light",
+    climate:["temperate","hot"], setting:["outdoor","mixed"],
+    notes:{ top:["Aldehydes","Green Notes"], heart:["Rose","Peony","Lily of the Valley","Freesia"], base:["Musk","Amber","Sandalwood"] },
+    bestFor:"Spring, daytime, casual feminine",
+    desc:"A walk through a French flower market on a crisp morning. Aldehydes and green notes give lift to a beautiful bouquet of rose, peony, and lily of the valley.",
+    price:145, priceLabel:"~$145–$175 USD", link:"[maisonmargiela.com](https://www.maisonmargiela.com/us/fragrance/replica/)" },
+
+  // ── LOUIS VUITTON ──
+  { id:26, brand:"Louis Vuitton", name:"Ombre Nomade EDP", emoji:"🏜️", img:"",
+    tags:["woody","amber","spicy"], gender:"unisex", strength:"strong",
+    climate:["cold","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Raspberry"], heart:["Oud","Birch"], base:["Incense","Cistus","Leather","Benzoin"] },
+    bestFor:"Evening, special occasions, winter",
+    desc:"A profound and mysterious oud — one of Louis Vuitton's masterpieces. Raspberry opens into rich oud and birch before a deep incense and leather base. Exceptional longevity.",
+    price:380, priceLabel:"~$380–$430 USD", link:"[us.louisvuitton.com](https://us.louisvuitton.com/eng-us/products/perfumes)" },
+
+  { id:27, brand:"Louis Vuitton", name:"Attrape-Rêves EDP", emoji:"🌌", img:"",
+    tags:["floral","sweet","fresh"], gender:"feminine", strength:"moderate",
+    climate:["temperate","hot"], setting:["indoor","mixed"],
+    notes:{ top:["Passion Fruit","Litchi","Peach"], heart:["Peony","Rose","Jasmine"], base:["Musk","Iris","White Cedar"] },
+    bestFor:"Evenings, spring, romantic occasions",
+    desc:"A dreamy, ethereal floral with passion fruit, rose, and peony. Feminine and luminous — like catching a dream just before it fades.",
+    price:340, priceLabel:"~$340–$395 USD", link:"[us.louisvuitton.com](https://us.louisvuitton.com/eng-us/products/perfumes)" },
+
+  // ── INITIO ──
+  { id:28, brand:"Initio", name:"Atomic Rose EDP", emoji:"🌹", img:"",
+    tags:["floral","spicy","amber"], gender:"unisex", strength:"strong",
+    climate:["cold","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Pepper","Aldehydes"], heart:["Rose","Iso E Super"], base:["Oud","Civet","Musk","Ambergris"] },
+    bestFor:"Evening, winter, special occasions",
+    desc:"A nuclear rose — petal-perfect on the surface, primal underneath. Iso E Super and civet give it a skin-like quality that's intimate and provocative.",
+    price:270, priceLabel:"~$270–$330 USD", link:"[initio-parfums-prives.com](https://initio-parfums-prives.com/)" },
+
+  { id:29, brand:"Initio", name:"Oud for Greatness EDP", emoji:"👑", img:"",
+    tags:["woody","spicy","amber"], gender:"unisex", strength:"strong",
+    climate:["cold","temperate"], setting:["indoor"],
+    notes:{ top:["Saffron","Nutmeg"], heart:["Oud","Agarwood"], base:["Musk","Leather","Amber"] },
+    bestFor:"Special occasions, evening, winter",
+    desc:"Commanding and majestic — this oud is for those who want presence. Saffron and nutmeg open into a rich agarwood heart before settling into leather and amber.",
+    price:290, priceLabel:"~$290–$350 USD", link:"[initio-parfums-prives.com](https://initio-parfums-prives.com/)" },
+
+  { id:30, brand:"Initio", name:"Rehab EDP", emoji:"🌬️", img:"",
+    tags:["fresh","woody","aromatic"], gender:"unisex", strength:"moderate",
+    climate:["hot","temperate"], setting:["mixed","outdoor"],
+    notes:{ top:["Eucalyptus","Bergamot"], heart:["Cedar","Aromatic Notes"], base:["White Musk","Amberwood"] },
+    bestFor:"Daily wear, warm weather, versatile",
+    desc:"Clean and addictive — a Tongan vanilla-free fresh scent built on eucalyptus and cedar. Invigorating without being cold, warm without being sweet.",
+    price:255, priceLabel:"~$255–$310 USD", link:"[initio-parfums-prives.com](https://initio-parfums-prives.com/)" },
+
+  // ── GOLDFIELD & BANKS ──
+  { id:31, brand:"Goldfield & Banks", name:"Pacific Rock Moss EDP", emoji:"🌊", img:"",
+    tags:["woody","aquatic","fresh"], gender:"unisex", strength:"moderate",
+    climate:["temperate","hot"], setting:["outdoor","mixed"],
+    notes:{ top:["Lemon","Fern"], heart:["Oakmoss","Violet Leaf"], base:["Vetiver","Cedarwood","Amber"] },
+    bestFor:"Outdoors, casual wear, warm weather",
+    desc:"An Australian coastal fragrance — wild, windswept, and earthy. Oakmoss and fern over vetiver and cedar evoke untouched nature and open ocean air.",
+    price:175, priceLabel:"~$175–$215 USD", link:"[goldfieldandbanks.com](https://goldfieldandbanks.com/)" },
+
+  { id:32, brand:"Goldfield & Banks", name:"White Sandalwood EDP", emoji:"🤍", img:"",
+    tags:["woody","sweet","fresh"], gender:"unisex", strength:"light",
+    climate:["hot","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Raspberry","Bergamot"], heart:["Australian Sandalwood","Violet","Iris"], base:["White Musk","Amber"] },
+    bestFor:"Daily wear, gifting, tropical climate",
+    desc:"Soft, creamy Australian sandalwood lifted by raspberry and iris. Understated luxury — elegant without effort, versatile across any occasion.",
+    price:165, priceLabel:"~$165–$200 USD", link:"[goldfieldandbanks.com](https://goldfieldandbanks.com/)" },
+
+  { id:33, brand:"Goldfield & Banks", name:"Velvet Oud EDP", emoji:"🟤", img:"",
+    tags:["woody","amber","spicy"], gender:"unisex", strength:"strong",
+    climate:["cold","temperate"], setting:["indoor","mixed"],
+    notes:{ top:["Saffron","Rose"], heart:["Oud","Agarwood"], base:["Vanilla","Amber","Sandalwood"] },
+    bestFor:"Evening, autumn, cool weather",
+    desc:"A velvet-smooth oud from an Australian perspective — warmer and more approachable than Middle Eastern styles, with rose, saffron, and vanilla softening the agarwood heart.",
+    price:185, priceLabel:"~$185–$225 USD", link:"[goldfieldandbanks.com](https://goldfieldandbanks.com/)" }
+];
+
+// Brand metadata
+const BRAND_META = {
+  "Dior":            { emoji:"💎", url:"[dior.com](https://www.dior.com/en_us/beauty/fragrance)" },
+  "Chanel":          { emoji:"🌟", url:"[chanel.com](https://www.chanel.com/us/fragrance/)" },
+  "YSL":             { emoji:"⚡", url:"[yslbeauty.com](https://www.yslbeauty.com/us/fragrance/)" },
+  "Tom Ford":        { emoji:"🖤", url:"[tomford.com](https://www.tomford.com/fragrance/)" },
+  "Prada":           { emoji:"🔷", url:"[prada.com](https://www.prada.com/us/en/beauty/fragrance)" },
+  "Hermès":          { emoji:"🟠", url:"[hermes.com](https://www.hermes.com/us/en/category/beauty/fragrances/)" },
+  "Jo Malone":       { emoji:"🤍", url:"[jomalone.com](https://www.jomalone.com/us/)" },
+  "Diptyque":        { emoji:"🕯️", url:"[diptyqueparis.com](https://www.diptyqueparis.com/en_us/c/fragrances.html)" },
+  "Maison Margiela": { emoji:"📒", url:"[maisonmargiela.com](https://www.maisonmargiela.com/us/fragrance/replica/)" },
+  "Louis Vuitton":   { emoji:"🟡", url:"[us.louisvuitton.com](https://us.louisvuitton.com/eng-us/products/perfumes)" },
+  "Initio":          { emoji:"🔬", url:"[initio-parfums-prives.com](https://initio-parfums-prives.com/)" },
+  "Goldfield & Banks":{ emoji:"🌿", url:"[goldfieldandbanks.com](https://goldfieldandbanks.com/)" }
+};
+
+// ─────────────────────────────────────────
+// PAGE ROUTING
+// ─────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(name + '-page').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (name === 'browse') renderBrowse();
+}
+
+function smoothTo(id) {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }, 80);
+}
+
+// ─────────────────────────────────────────
+// QUIZ
+// ─────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.quiz-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  document.getElementById('quiz-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleScent(card) {
+  const selected = document.querySelectorAll('#scent-grid .scent-card.selected');
+  if (card.classList.contains('selected')) {
+    card.classList.remove('selected');
+  } else if (selected.length < 3) {
+    card.classList.add('selected');
+  } else {
+    showToast('Max 3 scent families');
+  }
+}
+
+function runQuiz() {
+  const radio = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; };
+  const scents = [...document.querySelectorAll('#scent-grid .scent-card.selected')].map(c => c.dataset.scent);
+
+  const answers = {
+    scents, setting: radio('setting'), climate: radio('climate'),
+    strength: radio('strength'), gender: radio('gender'), budget: radio('budget')
+  };
+
+  const scored = DB.map(f => {
+    let s = 0;
+    scents.forEach(sc => { if (f.tags.includes(sc)) s += 30; });
+    if (answers.climate && f.climate.includes(answers.climate)) s += 20;
+    if (answers.setting && f.setting.includes(answers.setting)) s += 15;
+    if (answers.strength) {
+      if (f.strength === answers.strength) s += 20;
+      else if (answers.strength === 'moderate' && f.strength !== 'strong') s += 8;
+    }
+    if (answers.gender) {
+      if (f.gender === 'unisex' || f.gender === answers.gender) s += 15;
+    }
+    if (answers.budget) {
+      const [lo, hi] = parseBudget(answers.budget);
+      if (f.price >= lo && (hi === Infinity || f.price <= hi)) s += 25;
+      else if (Math.abs(f.price - (hi === Infinity ? lo + 100 : (lo+hi)/2)) < 80) s += 8;
+    }
+    return { ...f, score: s };
+  }).sort((a,b) => b.score - a.score);
+
+  renderHomeGrid(scored, true);
+  document.getElementById('home-results-title').textContent = 'Your Top Matches';
+  document.getElementById('home-results-subtitle').textContent = 'Personalised results based on your answers — sorted by best match.';
+  smoothTo('home-results');
+  showToast('🎉 Your matches are ready!');
+}
+
+function parseBudget(str) {
+  if (!str) return [0, Infinity];
+  if (str === '400+') return [400, Infinity];
+  const parts = str.split('-').map(Number);
+  return [parts[0], parts[1]];
+}
+
+// ─────────────────────────────────────────
+// HOME GRID
+// ─────────────────────────────────────────
+function renderHomeGrid(list, showScore = false) {
+  const grid = document.getElementById('home-frag-grid');
+  const none = document.getElementById('home-no-results');
+  if (!list.length) { grid.innerHTML = ''; none.style.display = 'block'; return; }
+  none.style.display = 'none';
+  grid.innerHTML = list.slice(0, 9).map(f => cardHTML(f, showScore)).join('');
+}
+
+function cardHTML(f, showScore) {
+  const pct = showScore && f.score ? Math.min(99, Math.round((f.score / 125) * 100)) : null;
+  const imgTag = f.img ? `<img src="${f.img}" alt="${f.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+  const emojiStyle = f.img ? 'display:none' : '';
+  return `
+    <div class="fragrance-card" onclick="openModal(${f.id})">
+      <div class="frag-img-wrap">
+        ${imgTag}
+        <div class="frag-emoji-display" style="${emojiStyle}">${f.emoji}</div>
+        ${pct ? `<div class="match-badge-card">${pct}% Match</div>` : ''}
+      </div>
+      <div class="frag-body">
+        <div class="frag-brand-label">${f.brand}</div>
+        <div class="frag-name">${f.name}</div>
+        <div class="frag-tags">${f.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="frag-notes-preview">
+          ${f.notes.top.slice(0,3).join(' · ')}
+        </div>
+        <div class="frag-footer">
+          <div class="frag-price">${f.priceLabel}</div>
+          <button class="btn-primary btn-sm" onclick="event.stopPropagation();openModal(${f.id})">Details</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────
+// BROWSE PAGE — grouped by brand
+// ─────────────────────────────────────────
+function renderBrowse() {
+  const scent  = document.getElementById('b-scent').value;
+  const budget = document.getElementById('b-budget').value;
+  const gender = document.getElementById('b-gender').value;
+  const strength = document.getElementById('b-strength').value;
+
+  let filtered = DB.filter(f => {
+    if (scent   && !f.tags.includes(scent)) return false;
+    if (gender  && f.gender !== gender && f.gender !== 'unisex') return false;
+    if (strength && f.strength !== strength) return false;
+    if (budget) {
+      const [lo, hi] = parseBudget(budget);
+      if (f.price < lo || (hi !== Infinity && f.price > hi)) return false;
+    }
+    return true;
+  });
+
+  const body = document.getElementById('browse-body');
+  if (!filtered.length) {
+    body.innerHTML = `<div class="no-results"><div class="icon">🔍</div><p>No fragrances match your filters.<br>Try adjusting your selection.</p></div>`;
+    return;
+  }
+
+  // Group by brand
+  const brandOrder = Object.keys(BRAND_META);
+  const grouped = {};
+  filtered.forEach(f => {
+    if (!grouped[f.brand]) grouped[f.brand] = [];
+    grouped[f.brand].push(f);
+  });
+
+  body.innerHTML = brandOrder
+    .filter(b => grouped[b] && grouped[b].length)
+    .map(b => {
+      const meta = BRAND_META[b];
+      const frags = grouped[b];
+      return `
+        <div class="brand-section" id="brand-${b.replace(/\s+/g,'-')}">
+          <div class="brand-header">
+            <div class="brand-logo-circle">${meta.emoji}</div>
+            <div>
+              <div class="brand-name-title">${b}</div>
+              <div class="brand-count">${frags.length} fragrance${frags.length>1?'s':''} in collection</div>
+            </div>
+            <a href="${meta.url}" target="_blank" rel="noopener" class="brand-visit">Visit Brand ↗</a>
+          </div>
+          <div class="brand-grid">
+            ${frags.map(f => cardHTML(f, false)).join('')}
+          </div>
+        </div>`;
+    }).join('');
+}
+
+function clearBrowseFilters() {
+  ['b-scent','b-budget','b-gender','b-strength'].forEach(id => document.getElementById(id).value = '');
+  renderBrowse();
+}
+
+// ─────────────────────────────────────────
+// BRAND PILLS (home)
+// ─────────────────────────────────────────
+function buildBrandPills() {
+  const grid = document.getElementById('brands-grid-home');
+  grid.innerHTML = Object.keys(BRAND_META).map(b =>
+    `<div class="brand-pill" onclick="showPage('browse');setTimeout(()=>{const el=document.getElementById('brand-${b.replace(/\s+/g,'-')}');if(el)el.scrollIntoView({behavior:'smooth'});},300)">${b}</div>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────
+function openModal(id) {
+  const f = DB.find(x => x.id === id);
+  if (!f) return;
+
+  document.getElementById('m-brand').textContent = f.brand;
+  document.getElementById('m-name').textContent  = f.name;
+  document.getElementById('m-desc').textContent  = f.desc;
+  document.getElementById('m-price').textContent = f.priceLabel;
+  document.getElementById('m-best').textContent  = f.bestFor;
+  document.getElementById('m-strength').textContent = f.strength.charAt(0).toUpperCase() + f.strength.slice(1);
+  document.getElementById('m-climate').textContent  = f.climate.map(c => c.charAt(0).toUpperCase()+c.slice(1)).join(', ');
+  document.getElementById('m-tags').innerHTML = f.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+  document.getElementById('m-link').href = f.link;
+
+  // Notes pyramid
+  const notesEl = document.getElementById('m-notes');
+  notesEl.innerHTML = `
+    <div class="notes-row"><span class="notes-label">Top</span><div class="notes-pills">${f.notes.top.map(n=>`<span class="note-pill">${n}</span>`).join('')}</div></div>
+    <div class="notes-row"><span class="notes-label">Heart</span><div class="notes-pills">${f.notes.heart.map(n=>`<span class="note-pill">${n}</span>`).join('')}</div></div>
+    <div class="notes-row"><span class="notes-label">Base</span><div class="notes-pills">${f.notes.base.map(n=>`<span class="note-pill">${n}</span>`).join('')}</div></div>
+  `;
+
+  // Image
+  const img = document.getElementById('modal-img');
+  const emojiLg = document.getElementById('modal-emoji-lg');
+  if (f.img) {
+    img.src = f.img; img.style.display = 'block'; emojiLg.style.display = 'none';
+  } else {
+    img.style.display = 'none'; emojiLg.style.display = 'flex'; emojiLg.textContent = f.emoji;
+  }
+
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function maybeCloseModal(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+// ─────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+renderHomeGrid(DB);
+buildBrandPills();
+</script>
+</body>
+</html>
